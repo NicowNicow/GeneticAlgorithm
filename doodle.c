@@ -42,6 +42,8 @@ void gestionEvenement(EvenementGfx event)
 			if (player.alive==TRUE)
 			{
 				platform_bounce(&player, platforms_list);
+				player=scrolling(platforms_list, player);
+				check_platforms(platforms_list);
 				keyboard=toucheClavier();
 				player=move_player(player,keyboard);
 				player=death_player(player);
@@ -61,6 +63,7 @@ void gestionEvenement(EvenementGfx event)
 			{		
 				case 'Q':
 				case 'q':
+					desalloc_platforms_list(platforms_list);
 					termineBoucleEvenements();
 					break;
 			}

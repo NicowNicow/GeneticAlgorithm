@@ -36,11 +36,11 @@ PLAY move_player(PLAY player, int keyboard)
 {
 	if (keyboard==16 && player.Xpos+50<largeurFenetre()) // to right
 	{
-		player.Xpos=player.Xpos+7;
+		player.Xpos=player.Xpos+9;
 	}
 	if (keyboard==15 && player.Xpos>0)	//to left
 	{
-		player.Xpos=player.Xpos-7;
+		player.Xpos=player.Xpos-9;
 	}
 	return(player);
 }
@@ -64,7 +64,7 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 		player->Ypos=player->Ypos+5;
 		player->jumpTime=1;
 		score_up(player, platforms_list);
-		scrolling(platforms_list, player);
+		rafraichisFenetre();
 	}
 	else if (player->jumpTime!=0)
 	{
@@ -135,17 +135,11 @@ PLA** initial_spawn_platform(PLA** platforms_list, int index)
 }
 
 
-// void spawn_platform(PLA** platforms_list, int index)
-// {
-
-// }
-
-
-void scrolling(PLA** platforms_list, PLAY* player)
+PLAY scrolling(PLA** platforms_list, PLAY player)
 {
 	static int countdown;
 	static BOOL temp;
-	if (player->Ypos > 550)
+	if (player.Ypos > 550)
 	{
 		temp=TRUE;
 	}
@@ -153,7 +147,7 @@ void scrolling(PLA** platforms_list, PLAY* player)
 	{
 		if (countdown<=60)
 		{
-			player->Ypos=player->Ypos-5;
+			player.Ypos=player.Ypos-5;
 			for (int index=0;index<6;index++)
 			{
 				platforms_list[index]->Ypos=platforms_list[index]->Ypos-5;
@@ -164,32 +158,61 @@ void scrolling(PLA** platforms_list, PLAY* player)
 		else
 		{
 			temp=FALSE;
+			countdown=0;
 		}
 		
 	}
-	countdown=0;
-	player->jump=10;
+	player.jump=10;
 	rafraichisFenetre();
-
+	return(player);
 }
 
 
-// void check_platforms(PLA** platforms_list)
-// {
-
-// }
-
-
-// void despawn_platform(PLA** platforms_list, int index)
-// {
-
-// }
+void check_platforms(PLA** platforms_list)
+{
+	for (int index=0;index<6;index++){
+		if (platforms_list[index]->Ypos<50){
+			replace_platform(platforms_list, index);
+		}
+	}
+} 
 
 
-// void desalloc_platforms_list(PLA** platform_list)
-// {
+void replace_platform(PLA** platforms_list, int previousIndex)
+{
+	int Ymax;
+	Ymax=0;
+	for (int index=0; index<6;index++)
+	{
+		if (index==previousIndex)
+		{
+			index++;
+		}
+		if (platforms_list[index]->Ypos>=Ymax)
+		{
+			Ymax=platforms_list[index]->Ypos;
+		}
+	}
+	platforms_list[previousIndex]->Ypos=Ymax+random_generator(70,120);
+	if (platforms_list[previousIndex]->Ypos>=900)
+	{
+		platforms_list[previousIndex]->Ypos=(int)(2*platforms_list[previousIndex]->Ypos)/3;
+	}
+	printf("%d\n", platforms_list[previousIndex]->Ypos);
+	platforms_list[previousIndex]->Xpos=random_generator(0,410);
+	printf("%d\n",platforms_list[previousIndex]->Ypos);
+	platforms_list[previousIndex]->scorePlat=1;
+}
 
-// }
+
+void desalloc_platforms_list(PLA** platforms_list)
+{
+	for (int index=0;index<6;index++)
+	{
+		free(platforms_list[index]);
+	}
+	free(platforms_list);
+}
 
 
 /* ------------------  Drawing Stuff  ------------------ */
@@ -219,8 +242,8 @@ void draw_player(PLAY player)
 
 
 void write_score(PLAY player){
-	char displayScore[32]="";
-	sprintf(displayScore, "Score = %d", player.score);
+	char displayScore[64]="";
+	sprintf(displayScore, "Score = %d \t Generation = x", player.score);
 	couleurCourante(0,0,0);
-	afficheChaine(displayScore, 20, 10, 10);
+	afficheChaine(displayScore, 20, 10, 770);
 }

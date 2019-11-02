@@ -25,7 +25,7 @@ typedef struct PLAYER   //Definition of a player structure
     int jump;
     int jumpTime;
 	BOOL alive;
-    int* color[3]= {0};
+    int color[3];
 } PLAY;
 
 
@@ -49,15 +49,13 @@ PLAY death_player(PLAY player); //Change the status of a player to dead as soons
 
 PLA** malloc_platforms_list(void);  //Set up a Platform List with up to 6 slots
 
-void spawn_platform(PLA** platforms_list, int index);  //Allow a platform to spawn as soon as a slot is free in the list
-
 PLA** initial_spawn_platform(PLA** platforms_list, int index); //Set the spawn position of the initial platforms
 
-void scrolling(PLA** platforms_list, PLAY* player); //Used to pull down platforms as the player go up
+PLAY scrolling(PLA** platforms_list, PLAY player); //Used to pull down platforms as the player go up
 
-void check_platform(PLA** platforms_list);  //Check if a platform in the list is at level 0, in which case it triggers its despawn and a respawn of a new one
+void check_platforms(PLA** platforms_list);  //Check if a platform in the list is at level 0, in which case it triggers its despawn and a respawn of a new one
 
-void despawn_platform(PLA** platforms_list, int index);    //Make a platform despawn as soon as it fells of the screen
+void replace_platform(PLA** platforms_list, int index);    //Make a platform despawn as soon as it fells of the screen
 
 void desalloc_platforms_list(PLA** platforms_list); //Free all the platforms list
 
