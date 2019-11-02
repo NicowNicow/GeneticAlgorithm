@@ -21,12 +21,12 @@ PLAY spawn_player(void)
 	player.Xpos=215;
 	player.Ypos=120;
 	player.score=0;
-	player.jump=TRUE;
-	player.jumpTemp=0;
+	player.jump=10; //Arbitrary value that can't be obtain naturally in the program
+	player.jumpTime=0;
 	player.alive=TRUE; 
 	for (int index=0; index<3; index++)
 	{
-		player.color[index]=(intptr_t)random_generator(0,255);
+		player.color[index]=random_generator(0,255);
 	}
 	return(player);
 }
@@ -34,11 +34,11 @@ PLAY spawn_player(void)
 
 PLAY move_player(PLAY player, int keyboard)
 {
-	if (keyboard==16) // to right
+	if (keyboard==16 && player.Xpos+50<largeurFenetre()) // to right
 	{
 		player.Xpos=player.Xpos+7;
 	}
-	if (keyboard==15)	//to left
+	if (keyboard==15 && player.Xpos>0)	//to left
 	{
 		player.Xpos=player.Xpos-7;
 	}
@@ -52,31 +52,27 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 	{
 		if ((((platforms_list[index]->Ypos)+15<=player->Ypos)&&((platforms_list[index]->Ypos)+25>=player->Ypos))&&(((platforms_list[index]->Xpos)-48<=player->Xpos)&&((platforms_list[index]->Xpos)+69>=player->Xpos)))
 		{
-			player->jump=TRUE;
+			player->jump=index;
 		}
-		printf("plateforme %d, Ypos+20: %d, Xpos-48: %d, Xpos+69: %d\n", index,platforms_list[index]->Ypos+20,platforms_list[index]->Xpos-48,platforms_list[index]->Xpos+69);
-		printf("player Ypos: %d, Xpos: %d\n", player->Ypos, player->Xpos);
-		printf("%d\n", player->jump);
-		if (player->jump==TRUE)
+		if (player->jump!=10)
 		{
 			break;
 		}
 	}
-	printf("======================================\n");
-	if (player->jump==TRUE)
+	if (player->jump!=10)
 	{
 		player->Ypos=player->Ypos+5;
-		player->jumpTemp=1;
-		player->jump=FALSE;
-		rafraichisFenetre();
+		player->jumpTime=1;
+		score_up(player, platforms_list);
+		scrolling(platforms_list, player);
 	}
-	else if (player->jumpTemp!=0)
+	else if (player->jumpTime!=0)
 	{
 		player->Ypos=player->Ypos+5;
-		player->jumpTemp=player->jumpTemp+1;
-		if (player->jumpTemp>=40)
+		player->jumpTime=player->jumpTime+1;
+		if (player->jumpTime>=40)
 		{
-			player->jumpTemp=0;
+			player->jumpTime=0;
 		}
 		rafraichisFenetre();
 	}
@@ -88,28 +84,24 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 }
 
 
-// void wall_bounce(PLAY* player)
-// {
-
-// }
-
-
-// PLAY score_up(PLAY player)
-// {
-
-// }
+void score_up(PLAY* player, PLA** platforms_list)
+{
+	if (platforms_list[player->jump]->scorePlat==1)
+	{
+		player->score=player->score+1;
+		platforms_list[player->jump]->scorePlat=0;
+	}
+}
 
 
-// PLAY death_player(PLAY player)
-// {
-
-// }
-
-
-// void despawn_player(PLA player)
-// {
-// 	free();
-// }
+PLAY death_player(PLAY player)
+{
+	if (player.Ypos<=0)
+	{
+		player.alive=FALSE;
+	}
+	return(player);
+}
 
 
 /* ------------------  Platform Stuff  ------------------ */
@@ -138,29 +130,57 @@ PLA** initial_spawn_platform(PLA** platforms_list, int index)
 {	
 	platforms_list[index]->Ypos=random_generator(100,150)+(platforms_list[index-1]->Ypos);
 	platforms_list[index]->Xpos=random_generator(0,410);
+	platforms_list[index]->scorePlat=1;
 	return(platforms_list);
 }
 
 
-// PLA** spawn_platform(PLA** platforms_list, int index)
+// void spawn_platform(PLA** platforms_list, int index)
 // {
 
 // }
 
 
-// PLA** scrolling(PLA** platforms_list, PLAY player)
+void scrolling(PLA** platforms_list, PLAY* player)
+{
+	static int countdown;
+	static BOOL temp;
+	if (player->Ypos > 550)
+	{
+		temp=TRUE;
+	}
+	if (temp==TRUE)
+	{
+		if (countdown<=60)
+		{
+			player->Ypos=player->Ypos-5;
+			for (int index=0;index<6;index++)
+			{
+				platforms_list[index]->Ypos=platforms_list[index]->Ypos-5;
+			}
+			countdown=countdown+1;
+			rafraichisFenetre();
+		}
+		else
+		{
+			temp=FALSE;
+		}
+		
+	}
+	countdown=0;
+	player->jump=10;
+	rafraichisFenetre();
+
+}
+
+
+// void check_platforms(PLA** platforms_list)
 // {
 
 // }
 
 
-// PLA** check_platforms(PLA** platforms_list)
-// {
-
-// }
-
-
-// PLA** despawn_platform(PLA** platforms_list, int index)
+// void despawn_platform(PLA** platforms_list, int index)
 // {
 
 // }
@@ -195,4 +215,12 @@ void draw_player(PLAY player)
 {
 	couleurCourante((intptr_t)player.color[0], (intptr_t)player.color[1], (intptr_t)player.color[2]);
 	rectangle(player.Xpos, player.Ypos, player.Xpos + 50, player.Ypos + 50);
+}
+
+
+void write_score(PLAY player){
+	char displayScore[32]="";
+	sprintf(displayScore, "Score = %d", player.score);
+	couleurCourante(0,0,0);
+	afficheChaine(displayScore, 20, 10, 10);
 }

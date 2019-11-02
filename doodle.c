@@ -39,37 +39,20 @@ void gestionEvenement(EvenementGfx event)
 			break;
 
 		case Temporisation:
-			platform_bounce(&player, platforms_list);
-/* 			if (Ypos==0){
-				Jump=TRUE;
-				printf("Test d'aller %d\n", Jump);
-			} */
-			/* if (Jump==TRUE){
-				if (Ypos<200){
-					printf("Test lol %d\n", Ypos);
-					Ypos=Ypos+5;
-					rafraichisFenetre();
-				}
-				if (Ypos>=200){
-					Jump=FALSE;
-					printf("Test de retour %d\n", Jump);
-				}	
+			if (player.alive==TRUE)
+			{
+				platform_bounce(&player, platforms_list);
+				keyboard=toucheClavier();
+				player=move_player(player,keyboard);
+				player=death_player(player);
 			}
-			if (Jump==FALSE){
-				if (Ypos>0){
-					Ypos=Ypos-10;
-					rafraichisFenetre();	
-				}
-				
-			} */
-			keyboard=toucheClavier();
-			player=move_player(player,keyboard);
-			break;
+		break;
 
 		case Affichage:
 			draw_background();
 			draw_platforms(platforms_list);
 			draw_player(player);
+			write_score(player);
 			demandeTemporisation(20);
 			break;
 
