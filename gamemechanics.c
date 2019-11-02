@@ -14,6 +14,7 @@ int random_generator(int min, int max)
 
 
 /* ------------------  Player Stuff  ------------------ */
+
 PLAY spawn_player(void)
 {
 	PLAY player;
@@ -21,10 +22,11 @@ PLAY spawn_player(void)
 	player.Ypos=120;
 	player.score=0;
 	player.jump=TRUE;
+	player.jumpTemp=0;
 	player.alive=TRUE; 
 	for (int index=0; index<3; index++)
 	{
-		player.color[index]=(int)random_generator(0,255);
+		player.color[index]=(intptr_t)random_generator(0,255);
 	}
 	return(player);
 }
@@ -34,11 +36,11 @@ PLAY move_player(PLAY player, int keyboard)
 {
 	if (keyboard==16) // to right
 	{
-		player.Xpos=player.Xpos+5;
+		player.Xpos=player.Xpos+7;
 	}
 	if (keyboard==15)	//to left
 	{
-		player.Xpos=player.Xpos-5;
+		player.Xpos=player.Xpos-7;
 	}
 	return(player);
 }
@@ -46,61 +48,71 @@ PLAY move_player(PLAY player, int keyboard)
 
 void platform_bounce(PLAY* player, PLA** platforms_list)
 {
-	int posTemp;
-	for (int index=0;index<7;index++)
+	for (int index=0;index<6;index++)
 	{
-		if (player->Xpos >= platforms_list[index]->Xpos && player->Xpos <= platforms_list[index]->Xpos+70 && player->Ypos == platforms_list[index]->Ypos+20){
+		if ((((platforms_list[index]->Ypos)+15<=player->Ypos)&&((platforms_list[index]->Ypos)+25>=player->Ypos))&&(((platforms_list[index]->Xpos)-48<=player->Xpos)&&((platforms_list[index]->Xpos)+69>=player->Xpos)))
+		{
 			player->jump=TRUE;
-			posTemp=player->Ypos;
-			printf(" Jump = %d", player->jump);
+		}
+		printf("plateforme %d, Ypos+20: %d, Xpos-48: %d, Xpos+69: %d\n", index,platforms_list[index]->Ypos+20,platforms_list[index]->Xpos-48,platforms_list[index]->Xpos+69);
+		printf("player Ypos: %d, Xpos: %d\n", player->Ypos, player->Xpos);
+		printf("%d\n", player->jump);
+		if (player->jump==TRUE)
+		{
 			break;
 		}
 	}
+	printf("======================================\n");
 	if (player->jump==TRUE)
 	{
-		if (player->Ypos-posTemp<200){
-			player->Ypos=player->Ypos+5;
-			rafraichisFenetre();
+		player->Ypos=player->Ypos+5;
+		player->jumpTemp=1;
+		player->jump=FALSE;
+		rafraichisFenetre();
+	}
+	else if (player->jumpTemp!=0)
+	{
+		player->Ypos=player->Ypos+5;
+		player->jumpTemp=player->jumpTemp+1;
+		if (player->jumpTemp>=40)
+		{
+			player->jumpTemp=0;
 		}
+		rafraichisFenetre();
 	}
 	else
 	{
-		if (player->Ypos>0)
-		{
-			player->Ypos=player->Ypos-10;
-			rafraichisFenetre();
-		}
+		player->Ypos=player->Ypos-10;
+		rafraichisFenetre();
 	}
 }
 
 
-void wall_bounce(PLAY* player)
-{
+// void wall_bounce(PLAY* player)
+// {
 
-}
-
-
-PLAY score_up(PLAY player)
-{
-
-}
+// }
 
 
-PLAY death_player(PLAY player)
-{
+// PLAY score_up(PLAY player)
+// {
 
-}
+// }
 
 
-void despawn_player(PLA player)
-{
-	free(player);
-}
+// PLAY death_player(PLAY player)
+// {
+
+// }
+
+
+// void despawn_player(PLA player)
+// {
+// 	free();
+// }
 
 
 /* ------------------  Platform Stuff  ------------------ */
-
-
 
 
 PLA** malloc_platforms_list(void)
@@ -130,34 +142,34 @@ PLA** initial_spawn_platform(PLA** platforms_list, int index)
 }
 
 
-PLA** spawn_platform(PLA** platforms_list, int index)
-{
+// PLA** spawn_platform(PLA** platforms_list, int index)
+// {
 
-}
-
-
-PLA** scrolling(PLA** platforms_list, PLAY player)
-{
-
-}
+// }
 
 
-PLA** check_platforms(PLA** platforms_list)
-{
+// PLA** scrolling(PLA** platforms_list, PLAY player)
+// {
 
-}
-
-
-PLA** despawn_platform(PLA** platforms_list, int index)
-{
-
-}
+// }
 
 
-vois desalloc_platforms_list(PLA** platform_list)
-{
+// PLA** check_platforms(PLA** platforms_list)
+// {
 
-}
+// }
+
+
+// PLA** despawn_platform(PLA** platforms_list, int index)
+// {
+
+// }
+
+
+// void desalloc_platforms_list(PLA** platform_list)
+// {
+
+// }
 
 
 /* ------------------  Drawing Stuff  ------------------ */

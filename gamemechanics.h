@@ -22,6 +22,7 @@ typedef struct PLAYER   //Definition of a player structure
     int Ypos;
 	int score;
     BOOL jump;
+    int jumpTemp;
 	BOOL alive;
     int* color[3];
 } PLAY;
