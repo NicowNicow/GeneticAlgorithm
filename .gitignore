@@ -1,2 +1,14 @@
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+doodle.o
+gamemechanics.o
+GfxLib/BmpLib.o
+GfxLib/ErreurLib.o
+GfxLib/ESLib.o
+GfxLib/GfxLib.o
+GfxLib/OutilsLib.o
+GfxLib/SocketLib.o
+GfxLib/ThreadLib.o
+GfxLib/TortueLib.o
+GfxLib/VectorLib.o
+GfxLib/WavLib.o
