@@ -2,6 +2,7 @@
 #include <stdio.h> // For printf()
 #include <stdint.h> //for intptr_t
 #include "gamemechanics.h" // For all things game-related
+#include "genetics.h"	//For all the AI part of the project
 #include "./GfxLib/GfxLib.h" // To do simple graphics
 #include "./GfxLib/BmpLib.h"
 
@@ -15,34 +16,39 @@ int random_generator(int min, int max)
 
 /* ------------------  Player Stuff  ------------------ */
 
-PLAY spawn_player(void)
+void spawn_players(PLAY** players_list)
 {
-	PLAY player;
-	player.Xpos=215;
-	player.Ypos=120;
-	player.score=0;
-	player.jump=10; //Arbitrary value that can't be obtain naturally in the program
-	player.jumpTime=0;
-	player.alive=TRUE; 
-	for (int index=0; index<3; index++)
+	for (int index=0;index<numberPlayers; index++)
 	{
-		player.color[index]=random_generator(0,255);
+		players_list[index]->Xpos=215;
+		players_list[index]->Ypos=120;
+		players_list[index]->score=0;
+		players_list[index]->jump=10; //Arbitrary value that can't be obtain naturally in the program
+		players_list[index]->jumpTime=0;
+		players_list[index]->alive=TRUE;
+		players_list[index]->keyboard=0;
+		for (int index2=0; index2<3; index2++)
+		{
+			players_list[index]->color[index2]=random_generator(0,255);
+		}
 	}
-	return(player);
 }
 
 
-PLAY move_player(PLAY player, int keyboard)
+void move_player(PLAY* player)
 {
-	if (keyboard==16 && player.Xpos+50<largeurFenetre()) // to right
+	if (player->keyboard==0) //No movements
 	{
-		player.Xpos=player.Xpos+9;
+		player->Xpos=player->Xpos;
 	}
-	if (keyboard==15 && player.Xpos>0)	//to left
+	if (player->keyboard==1 && player->Xpos+50<largeurFenetre()) // to right
 	{
-		player.Xpos=player.Xpos-9;
+		player->Xpos=player->Xpos+9;
 	}
-	return(player);
+	if (player->keyboard==2 && player->Xpos>0)	//to left
+	{
+		player->Xpos=player->Xpos-9;
+	}
 }
 
 
@@ -94,13 +100,12 @@ void score_up(PLAY* player, PLA** platforms_list)
 }
 
 
-PLAY death_player(PLAY player)
+void death_player(PLAY* player)
 {
-	if (player.Ypos<=0)
+	if (player->Ypos<=0)
 	{
-		player.alive=FALSE;
+		player->alive=FALSE;
 	}
-	return(player);
 }
 
 
@@ -109,7 +114,7 @@ PLAY death_player(PLAY player)
 
 PLA** malloc_platforms_list(void)
 {
-	PLA** platforms_list=NULL;
+	PLA** platforms_list;
 	platforms_list=(PLA**)malloc(sizeof(PLA*)*7);
 	for (int index=0; index<7; index++)
 	{
@@ -120,26 +125,25 @@ PLA** malloc_platforms_list(void)
 			platforms_list[index]->Xpos=random_generator(155,225);
 			
 		}
-		else platforms_list=initial_spawn_platform(platforms_list, index);
+		else initial_spawn_platform(platforms_list, index);
 	}
 	return(platforms_list);
 }
 
 
-PLA** initial_spawn_platform(PLA** platforms_list, int index)
+void initial_spawn_platform(PLA** platforms_list, int index)
 {	
 	platforms_list[index]->Ypos=random_generator(100,150)+(platforms_list[index-1]->Ypos);
 	platforms_list[index]->Xpos=random_generator(0,410);
 	platforms_list[index]->scorePlat=1;
-	return(platforms_list);
 }
 
 
-PLAY scrolling(PLA** platforms_list, PLAY player)
+void scrolling(PLA** platforms_list, PLAY* player)
 {
 	static int countdown;
 	static BOOL temp;
-	if (player.Ypos > 550)
+	if (player->Ypos > 550)
 	{
 		temp=TRUE;
 	}
@@ -147,7 +151,7 @@ PLAY scrolling(PLA** platforms_list, PLAY player)
 	{
 		if (countdown<=60)
 		{
-			player.Ypos=player.Ypos-5;
+			player->Ypos=player->Ypos-5;
 			for (int index=0;index<6;index++)
 			{
 				platforms_list[index]->Ypos=platforms_list[index]->Ypos-5;
@@ -162,9 +166,8 @@ PLAY scrolling(PLA** platforms_list, PLAY player)
 		}
 		
 	}
-	player.jump=10;
+	player->jump=10;
 	rafraichisFenetre();
-	return(player);
 }
 
 
@@ -232,17 +235,20 @@ void draw_platforms(PLA** platforms_list)
 }
 
 
-void draw_player(PLAY player)
+void draw_player(PLAY* player)
 {
-	couleurCourante((intptr_t)player.color[0], (intptr_t)player.color[1], (intptr_t)player.color[2]);
-	rectangle(player.Xpos, player.Ypos, player.Xpos + 50, player.Ypos + 50);
+	couleurCourante((intptr_t)player->color[0], (intptr_t)player->color[1], (intptr_t)player->color[2]);
+	rectangle(player->Xpos, player->Ypos, player->Xpos + 50, player->Ypos + 50);
 }
 
 
-void write_score(PLAY player)
+void draw_generation_score(int indexGenerations, int scoreMax)
 {
-	char displayScore[64]="";
-	sprintf(displayScore, "Score = %d \t Generation = x", player.score);
+	char displayGeneration[64]="";
+	char displayScoreMax[64]="";
+	sprintf(displayGeneration, "Generation = %d ", indexGenerations);
 	couleurCourante(0,0,0);
-	afficheChaine(displayScore, 20, 10, 770);
+	afficheChaine(displayGeneration, 20, 10, 770);
+	sprintf(displayScoreMax, "Score Max = %d ", scoreMax);
+	afficheChaine(displayScoreMax, 20, 250, 770);
 }

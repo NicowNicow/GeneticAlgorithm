@@ -12,3 +12,5 @@ GfxLib/ThreadLib.o
 GfxLib/TortueLib.o
 GfxLib/VectorLib.o
 GfxLib/WavLib.o
+doodle
+genetics.o

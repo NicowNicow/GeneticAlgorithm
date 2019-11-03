@@ -4,66 +4,104 @@
 #include "GfxLib.h" // To do simple graphics
 #include "ESLib.h" // For valeurAleatoire()
 
-#ifndef M_PI
+
+#ifndef M_PI	// D�finition of a PI variable
 #define M_PI 3.141592654
 #endif
 
+
 // Default width and height
-#define WindowWidth 800
+#define WindowWidth 1024
 #define WindowHeight 600
 
-#define IterationsPerRound 5000
 
-#define PopulationMaxSize 720
-#define PopulationSize MaxBound
+bool iterate = false;	//Declaration of an iterate variable
 
-typedef unsigned int Gene;
 
-double deg2rad(unsigned int degrees)
+#define PopulationSize 100	//definition of a PopulationSize Variable
+
+
+typedef unsigned int Gene;	//definition of a gene variable
+
+
+double range2rad(unsigned int degrees) //Function to convert degrees into radians
 {
-	return degrees*M_PI/180.;
+	return degrees*M_PI/256;
 }
 
-int fitness(Gene gene)
+
+bool phased = false;	//declaration of a phased Variable
+double phase = 0.;	//Declaration of a phase variable
+
+
+double function(double input)	//Function to apply cos to an input and a phase
 {
-	return (int)100*(cos(deg2rad(gene))+1.);
+	return cos(input-phase);
 }
 
-Gene population[PopulationMaxSize];
-int values[PopulationMaxSize];
-int sumOfValues = 0;
-int MaxBound = 180;
 
-void initializePopulation(void)
+int fitness(Gene gene)	//Function chosen by the user. Here, it's in order to find the maximal value of the cos function
 {
-	int index;
+	return (int)(100*(function(range2rad(gene))+1));
+}
+
+
+Gene population[PopulationSize];	//Declaration of a array of genes, which size is PopulationSize
+int values[PopulationSize];			//Declaration of a values array of the same size, used in computeValues
+int sumOfValues = 0;				//Declaration of a sumOfValues variable, used in computeValues and chooseGene
+int MaxBound = 256;					//Declaration of a maxBound variable, used in initializePopulation and Mutation
+
+
+void computeValues(void)	//Function that apply the fitness function to every value stored in population and store the returned value in the values array
+{
 	sumOfValues = 0;
-	for (index = 0; index < PopulationSize; ++index)
+	for (int index = 0; index < PopulationSize; ++index)
 	{
-		population[index] = valeurAleatoire()*MaxBound;
 		values[index] = fitness(population[index]);
 		sumOfValues += values[index];
 	}
 }
 
-Gene crossover(Gene gene1, Gene gene2)
+
+void initializePopulation(void)	//Function that initialize each value of the population array to a random value between 0 and 256 and then start computeValues()
 {
-	const int mask = valeurAleatoire()*65536;
-	return (gene1 & mask) | (gene2 & ~mask);
+	for (int index = 0; index < PopulationSize; ++index)
+		population[index] = (Gene)(valeurAleatoire()*MaxBound);
+	computeValues();
 }
 
-Gene mutation(Gene gene)
+
+Gene crossover(Gene gene1, Gene gene2) //Function that apply OR and AND logical operators between two genes and a randomly created mask
 {
-	const int bitNumber = valeurAleatoire()*32;
-	return ((gene ^ (1<<bitNumber))&1023)%MaxBound;
+	const unsigned int mask = valeurAleatoire()*65536; //32bits => integer between 0 and 65536 stored in binary (because everything is stored in binary it's a computer ffs)
+	return (Gene)((gene1 & mask) | (gene2 & ~mask)); // & and | are logical operators between two binary number. The ~ is the NOT logical operator
 }
 
-int chooseGene(void)
+
+Gene mutation(const Gene gene) //Function that randomly choose to apply a mutation on a gene or not
+{
+	switch ((int)(valeurAleatoire()*3))
+	{
+		case 0: // random value
+			return valeurAleatoire()*MaxBound;
+		case 1: // close value
+		{
+			const int number = (valeurAleatoire()-.5)*MaxBound/10.;
+			const int mutated = (int)gene + number;
+			return (Gene)(mutated < 0 ? 0 : (mutated >= MaxBound ? MaxBound-1 : mutated)); //if mutated<0, return 0; else (if mutated>=MaxBound, return MaxBound-1; else return mutated)
+		}
+		default: //no mutations
+			return gene;
+	}
+}
+
+
+int chooseGene(void)	//Function used to randomly choose a gene to modify
 {
 	const int randomLevel = valeurAleatoire()*sumOfValues;
 	int index = 0;
 	int partialSum = 0;
-	for(;;)
+	for(;;) //For loop without looping condition for it to stop
 	{
 		partialSum += values[index];
 		if (randomLevel < partialSum)
@@ -73,7 +111,8 @@ int chooseGene(void)
 	return index;
 }
 
-void replaceMin(Gene gene)
+
+void replaceMin(Gene gene)  //Function that find and replace the minimal value within a gene
 {
 	int index;
 	int indexMin = 0;
@@ -86,10 +125,12 @@ void replaceMin(Gene gene)
 	sumOfValues += values[indexMin];
 }
 
-#define HistogramSize PopulationMaxSize
-int histogram[HistogramSize];
 
-void computeHistogram(void)
+#define HistogramSize WindowWidth //Definition of a HistogramSize variable which value is WindowWidth=1024
+int histogram[HistogramSize];	//Declaration of a histogram array, which size is HistogramSize
+
+
+void computeHistogram(void)	//function used to set the histogram values to 0 and then put to 1 the value to which index is population[index]
 {
 	int index;
 	for (index = 0; index < HistogramSize; ++index)
@@ -98,7 +139,8 @@ void computeHistogram(void)
 		++histogram[population[index]];
 }
 
-int main(int argc, char *argv[])
+
+int main(int argc, char *argv[]) //Main function for gfxLib
 {
 	initialiseGfx(argc, argv);
 
@@ -109,23 +151,7 @@ int main(int argc, char *argv[])
 }
 
 
-// To draw a circle
-void circle(float xCenter, float yCenter, float radius)
-{
-	const int Steps = 8; // Number of sectors to draw a circle
-	const double AngularSteps = 2.*M_PI/Steps;
-	int index;
-
-	for (index = 0; index < Steps; ++index) // For each sector
-	{
-		const double angle = 2.*M_PI*index/Steps; // Compute the starting angle
-		triangle(xCenter, yCenter,
-                xCenter+radius*cos(angle), yCenter+radius*sin(angle),
-			     xCenter+radius*cos(angle+AngularSteps), yCenter+radius*sin(angle+AngularSteps));
-	}
-}
-
-void drawCosine(void)
+void drawFunc(void)	//Used to draw the cosinus function on the screen
 {
 	const int yCenter = hauteurFenetre()/2;
 	int index;
@@ -135,11 +161,12 @@ void drawCosine(void)
 	ligne(0, 0, 0, hauteurFenetre()-1);
 	ligne(0, yCenter, largeurFenetre()-1, yCenter);
 	couleurCourante(255, 255, 0);
-	for (index = 0; index < HistogramSize; ++index)
-		ligne(index, yCenter*(1+cos(deg2rad(index))), index+1, yCenter*(1+cos(deg2rad(index+1))));
+	for (index = 0; index < MaxBound; ++index)
+		ligne(index, yCenter*(1+function(range2rad(index))), index+1, yCenter*(1+function(range2rad(index+1))));
 }
 
-void drawHistogram(void)
+
+void drawHistogram(void)	//Used to draw the histogram on on the x-axis
 {
 	const int yCenter = hauteurFenetre()/2;
 	int index;
@@ -149,102 +176,123 @@ void drawHistogram(void)
 		if (histogram[index] != 0)
 		{
 			epaisseurDeTrait(1);
-			ligne(index, hauteurFenetre()/2, index, hauteurFenetre()/2+3*histogram[index]);
+			ligne(index, yCenter, index, yCenter+3*histogram[index]);
 			epaisseurDeTrait(8);
-			point(index, hauteurFenetre()/2);
-			point(index, yCenter*(1+cos(deg2rad(index))));
+			point(index, yCenter);
+			point(index, yCenter*(1+function(range2rad(index))));
 		}
 	}
 }
 
-void drawValues(void)
+
+void drawMaxFitness(void)	//Used to draw the best fitness
 {
 	int index;
-	couleurCourante(0, 255, 0);
-	epaisseurDeTrait(1);
-	for (index = 0; index < HistogramSize; ++index)
-	{
-		ligne(index, hauteurFenetre()/2, index, hauteurFenetre()/2+3*histogram[index]);
-		circle(index, hauteurFenetre()/2, histogram[index]);
-	}
+	int indexMax = 0;
+	for (index = 1; index < PopulationSize; ++index)
+		if (values[index] > values[indexMax])
+			indexMax = index;
+	couleurCourante(255, 0, 0);
+	const int yCenter = hauteurFenetre()/2;
+	for (index = 0; index < PopulationSize; ++index)
+		if (values[index] == values[indexMax])
+		{
+			point(population[index], yCenter);
+			point(population[index], yCenter*(1+function(range2rad(population[index]))));
+		}	
 }
-
 
 
 void gestionEvenement(EvenementGfx event)
 {
-	static int counter;
-
 	switch (event)
 	{
 		case Initialisation:
 			initializePopulation();
 			computeHistogram();
-			counter = 0;
+			iterate = false;
+			phase = false;
 			demandeTemporisation(20);
 			break;
 
 		case Temporisation:
-			if (counter > 0)
+			if (iterate)
 			{
+				if (phased)
+				{
+					phase += 1./128.; 
+					computeValues();
+				}
 				int index;
 				for (index = 0; index < 10; ++index)
 				{
-					Gene nouveau = crossover(chooseGene(), chooseGene());
+					Gene nouveau = crossover(population[chooseGene()], population[chooseGene()]);
 					nouveau = mutation(nouveau);
 					replaceMin(nouveau);
 				}
 				computeHistogram();
-				counter -= index;
-
+				
 				rafraichisFenetre();
 			}
 			break;
 
 		case Affichage:
 			effaceFenetre (0, 0, 0);
-			drawCosine();
+			drawFunc();
 			drawHistogram();
+			drawMaxFitness();
 			epaisseurDeTrait(2);
 			couleurCourante(0, 200, 255);
-			afficheChaine("1 : 180° ; 7 : 720° ; i : iterate ; r : reset", 16, 5, 5);
+			afficheChaine("1 : 180° ; 7 : 720° ; i : iterate ; p : phase ; r : reset", 16, 5, 5);
 			break;
 
 		case Clavier:
 			switch (caractereClavier())
 			{
 				case '1':
-					MaxBound = 180;
+					MaxBound = 256;
 					initializePopulation();
 					computeHistogram();
 					rafraichisFenetre();
 					break;
 
 				case '7':
-					MaxBound = 720;
+					MaxBound = 1024;
 					initializePopulation();
 					computeHistogram();
 					rafraichisFenetre();
 					break;
 
+				case 'i':
+				case 'I':
+					iterate = !iterate;
+					rafraichisFenetre();
+					break;
+
+				case 'P':
+				case 'p':
+					phased = !phased;
+					rafraichisFenetre();
+					break;
+					
 				case 'Q':
 				case 'q':
 					termineBoucleEvenements();
-					break;
-
-				case 'i':
-				case 'I':
-					counter = IterationsPerRound;
-					rafraichisFenetre();
 					break;
 
 				case 'R':
 				case 'r':
 					initializePopulation();
 					computeHistogram();
-					counter = 0;
 					rafraichisFenetre();
 					break;
+
+				case 's':
+				case 'S':
+					iterate = !iterate;
+					rafraichisFenetre();
+					break;
+
 			}
 			break;
 
