@@ -239,7 +239,8 @@ void draw_player(PLAY player)
 }
 
 
-void write_score(PLAY player){
+void write_score(PLAY player)
+{
 	char displayScore[64]="";
 	sprintf(displayScore, "Score = %d \t Generation = x", player.score);
 	couleurCourante(0,0,0);
