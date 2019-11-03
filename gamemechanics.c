@@ -198,9 +198,7 @@ void replace_platform(PLA** platforms_list, int previousIndex)
 	{
 		platforms_list[previousIndex]->Ypos=(int)(2*platforms_list[previousIndex]->Ypos)/3;
 	}
-	printf("%d\n", platforms_list[previousIndex]->Ypos);
 	platforms_list[previousIndex]->Xpos=random_generator(0,410);
-	printf("%d\n",platforms_list[previousIndex]->Ypos);
 	platforms_list[previousIndex]->scorePlat=1;
 }
 
