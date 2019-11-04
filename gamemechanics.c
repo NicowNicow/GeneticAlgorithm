@@ -4,11 +4,16 @@
 #include "gamemechanics.h" // For all things game-related
 #include "genetics.h"	//For all the AI part of the project
 #include "./GfxLib/GfxLib.h" // To do simple graphics
-#include "./GfxLib/BmpLib.h"
 
 //* ------------------  Stuff  ------------------ */
 
-int random_generator(int min, int max) 
+float random_float_generator(float value) 
+{ 
+    return(((float)rand()/(float)RAND_MAX)*value);
+}
+
+
+int random_int_generator(int min, int max) 
 { 
     return((rand()%(max-min+1))+min);
 }
@@ -29,7 +34,7 @@ void spawn_players(PLAY** players_list)
 		players_list[index]->keyboard=0;
 		for (int index2=0; index2<3; index2++)
 		{
-			players_list[index]->color[index2]=random_generator(0,255);
+			players_list[index]->color[index2]=random_int_generator(0,255);
 		}
 	}
 }
@@ -43,11 +48,11 @@ void move_player(PLAY* player)
 	}
 	if (player->keyboard==1 && player->Xpos+50<largeurFenetre()) // to right
 	{
-		player->Xpos=player->Xpos+9;
+		player->Xpos=player->Xpos+lateralSpeed;
 	}
 	if (player->keyboard==2 && player->Xpos>0)	//to left
 	{
-		player->Xpos=player->Xpos-9;
+		player->Xpos=player->Xpos-lateralSpeed;
 	}
 }
 
@@ -59,6 +64,7 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 		if ((((platforms_list[index]->Ypos)+15<=player->Ypos)&&((platforms_list[index]->Ypos)+25>=player->Ypos))&&(((platforms_list[index]->Xpos)-48<=player->Xpos)&&((platforms_list[index]->Xpos)+69>=player->Xpos)))
 		{
 			player->jump=index;
+		    score_up(player);
 		}
 		if (player->jump!=10)
 		{
@@ -67,14 +73,13 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 	}
 	if (player->jump!=10)
 	{
-		player->Ypos=player->Ypos+5;
+		player->Ypos=player->Ypos+jumpSpeed;
 		player->jumpTime=1;
-		score_up(player, platforms_list);
 		rafraichisFenetre();
 	}
 	else if (player->jumpTime!=0)
 	{
-		player->Ypos=player->Ypos+5;
+		player->Ypos=player->Ypos+jumpSpeed;
 		player->jumpTime=player->jumpTime+1;
 		if (player->jumpTime>=40)
 		{
@@ -84,19 +89,15 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 	}
 	else
 	{
-		player->Ypos=player->Ypos-10;
+		player->Ypos=player->Ypos-fallSpeed;
 		rafraichisFenetre();
 	}
 }
 
 
-void score_up(PLAY* player, PLA** platforms_list)
+void score_up(PLAY* player)
 {
-	if (platforms_list[player->jump]->scorePlat==1)
-	{
-		player->score=player->score+1;
-		platforms_list[player->jump]->scorePlat=0;
-	}
+	player->score=player->score+1;
 }
 
 
@@ -122,7 +123,7 @@ PLA** malloc_platforms_list(void)
 		if (index==0)
 		{
 			platforms_list[index]->Ypos=100;
-			platforms_list[index]->Xpos=random_generator(155,225);
+			platforms_list[index]->Xpos=random_int_generator(155,225);
 			
 		}
 		else initial_spawn_platform(platforms_list, index);
@@ -133,40 +134,49 @@ PLA** malloc_platforms_list(void)
 
 void initial_spawn_platform(PLA** platforms_list, int index)
 {	
-	platforms_list[index]->Ypos=random_generator(100,150)+(platforms_list[index-1]->Ypos);
-	platforms_list[index]->Xpos=random_generator(0,410);
-	platforms_list[index]->scorePlat=1;
+	platforms_list[index]->Ypos=random_int_generator(100,150)+(platforms_list[index-1]->Ypos);
+	platforms_list[index]->Xpos=random_int_generator(0,410);
 }
 
 
-void scrolling(PLA** platforms_list, PLAY* player)
+void scrolling(PLA** platforms_list)
 {
-	static int countdown;
-	static BOOL temp;
-	if (player->Ypos > 550)
+	static int countdownPlat;
+	if (countdownPlat<=60)
 	{
-		temp=TRUE;
+		for (int index=0;index<6;index++)
+		{
+			platforms_list[index]->Ypos=platforms_list[index]->Ypos-5;
+		}
+		countdownPlat=countdownPlat+1;
 	}
-	if (temp==TRUE)
+	else
 	{
-		if (countdown<=60)
-		{
-			player->Ypos=player->Ypos-5;
-			for (int index=0;index<6;index++)
-			{
-				platforms_list[index]->Ypos=platforms_list[index]->Ypos-5;
-			}
-			countdown=countdown+1;
-			rafraichisFenetre();
-		}
-		else
-		{
-			temp=FALSE;
-			countdown=0;
-		}
-		
+		countdownPlat=0;
 	}
-	player->jump=10;
+	rafraichisFenetre();
+}
+
+
+void scrolling_player(PLAY** players_list)
+{
+	static int countdownPlay;
+	if (countdownPlay<=60)
+	{
+		for (int index=0;index<numberPlayers;index++)
+		{
+			players_list[index]->Ypos=players_list[index]->Ypos-5;
+		}
+		countdownPlay=countdownPlay+1;
+	}
+	else
+	{
+		countdownPlay=0;
+	}
+	for (int index=0;index<numberPlayers;index++) //Player->jump designate the platform on which the player is jumping
+	{											  //During the scrolling, the player is not on any platform, hence the reset here
+		players_list[index]->jump=10;
+	}
 	rafraichisFenetre();
 }
 
@@ -196,13 +206,12 @@ void replace_platform(PLA** platforms_list, int previousIndex)
 			Ymax=platforms_list[index]->Ypos;
 		}
 	}
-	platforms_list[previousIndex]->Ypos=Ymax+random_generator(70,120);
+	platforms_list[previousIndex]->Ypos=Ymax+random_int_generator(70,120);
 	if (platforms_list[previousIndex]->Ypos>=900)
 	{
 		platforms_list[previousIndex]->Ypos=(int)(2*platforms_list[previousIndex]->Ypos)/3;
 	}
-	platforms_list[previousIndex]->Xpos=random_generator(0,410);
-	platforms_list[previousIndex]->scorePlat=1;
+	platforms_list[previousIndex]->Xpos=random_int_generator(0,410);
 }
 
 

@@ -73,7 +73,7 @@ void initializePopulation(void)	//Function that initialize each value of the pop
 
 Gene crossover(Gene gene1, Gene gene2) //Function that apply OR and AND logical operators between two genes and a randomly created mask
 {
-	const unsigned int mask = valeurAleatoire()*65536; //32bits => integer between 0 and 65536 stored in binary (because everything is stored in binary it's a computer ffs)
+	const unsigned int mask = valeurAleatoire()*65536; //16bits unsigned=> integer between 0 and 65536 stored in binary (because everything is stored in binary it's a computer ffs)
 	return (Gene)((gene1 & mask) | (gene2 & ~mask)); // & and | are logical operators between two binary number. The ~ is the NOT logical operator
 }
 

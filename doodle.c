@@ -2,7 +2,6 @@
 #include <stdio.h> // For printf()
 #include <time.h>	//For random_generator()
 #include "./GfxLib/GfxLib.h" // To do simple graphics
-#include "./GfxLib/BmpLib.h"
 #include "gamemechanics.h" // For all things game-related
 #include "genetics.h"	//For all the AI part of the project
 
@@ -10,12 +9,14 @@
 
 /* ------------------  Used Variables  ------------------ */
 
-#define numberGenerations 10
+
 static PLA** platforms_list;
 static PLAY** players_list;
 int indexGenerations;
 int allPlayersDead;
 int scoreMax;
+int indexMaxYPos;
+BOOL scrollingActive;
 
 
 /* ------------------  Main  ------------------ */
@@ -40,6 +41,7 @@ void gestionEvenement(EvenementGfx event)
 			indexGenerations=0;
 			allPlayersDead=0;
 			scoreMax=0;
+			indexMaxYPos=0;
 			platforms_list = malloc_platforms_list();
 			players_list=malloc_players_list();
 			demandeTemporisation(20);
@@ -47,13 +49,27 @@ void gestionEvenement(EvenementGfx event)
 
 		case Temporisation:
 			for (int index=0; index<numberPlayers;index++)
+			{
+				if (players_list[index]->Ypos>=550)
+				{
+					indexMaxYPos=index;
+					scrollingActive=TRUE;
+					break;
+				}
+			}
+			if (scrollingActive==TRUE)
+						{
+							scrolling(platforms_list);
+							scrolling_player(players_list); //I needed to cut down in two part the scrolling function to get more players
+							scrollingActive=FALSE;
+						}
+			for (int index=0; index<numberPlayers;index++)
 				{
 					if (players_list[index]->alive==TRUE)
 					{
 						platform_bounce(players_list[index], platforms_list);
-						scrolling(platforms_list, players_list[index]);
 						check_platforms(platforms_list);
-						move_bot(players_list[index]);
+						move_bot(players_list[index], platforms_list);
 						death_player(players_list[index]);
 						allPlayersDead=0;
 					}
@@ -63,12 +79,16 @@ void gestionEvenement(EvenementGfx event)
 					}
 				}
 			scoreMax=best_score(players_list);
+			if (allPlayersDead>=numberPlayers)
+			{
+				indexGenerations++;
+			}
 			if ((allPlayersDead>=numberPlayers)&&(indexGenerations<numberGenerations))
 			{
+				natural_selection(players_list);
 				regen_platforms_list(platforms_list);
-				regen_players_list(players_list);
+				spawn_players(players_list);	//Does not modify the genome of the players; only the coordinates, state (alive/dead, jumping/on the ground) and color
 				allPlayersDead=0;
-				indexGenerations++;
 			}
 		break;
 
@@ -78,10 +98,6 @@ void gestionEvenement(EvenementGfx event)
 			if (indexGenerations<numberGenerations)	
 			{
 				draw_generation_score(indexGenerations+1, scoreMax);
-			}
-			if (indexGenerations==numberGenerations)	//Just so that it does print "Generation X+1" after finishing the X generation
-			{
-				draw_generation_score(indexGenerations, scoreMax);
 			}
 			for (int index=0;index<numberPlayers;index++)
 			{
@@ -98,6 +114,13 @@ void gestionEvenement(EvenementGfx event)
 					desalloc_players_list(players_list);
 					desalloc_platforms_list(platforms_list);
 					termineBoucleEvenements();
+					break;
+
+				case 'R':	//Just in case a player block itself: it reloads the current generation process
+				case 'r':
+					regen_platforms_list(platforms_list);
+					spawn_players(players_list);	//Does not modify the genome of the players; only the coordinates, state (alive/dead, jumping/on the ground) and color
+					allPlayersDead=0;
 					break;
 			}
 			break;

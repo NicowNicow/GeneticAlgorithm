@@ -9,3 +9,9 @@
 ->The "Report.docx" is the documentation of the project and the several sources used for our project
 
 ->The "algogen - commented.c" is just a fully commented version of the algogen file you gave to us during the lessons.
+
+-> We didn't manage to solve the "double free or corruption (out) Aborted (core dumped)" issue occuring when closing the project.
+Most probably due to the desalloc_players_list function
+
+->In some rare cases, the next plateform spawn out of jump range of the players, or the players get stuck. In those case, pressing "R" allow players and platforms to
+respawn, without changing the current genomes.

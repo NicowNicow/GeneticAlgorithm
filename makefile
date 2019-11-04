@@ -1,13 +1,13 @@
 doodle: doodle.o gamemechanics.o genetics.o ./GfxLib/libisentlib.a
 	gcc -Wall $^ -o $@ -lm -lglut -lGL -lX11
 
-doodle.o: doodle.c ./GfxLib/GfxLib.h ./GfxLib/BmpLib.h 
+doodle.o: doodle.c ./GfxLib/GfxLib.h  
 	gcc -Wall -c $< -O2
 
-gamemechanics.o: gamemechanics.c ./GfxLib/GfxLib.h ./GfxLib/BmpLib.h 
+gamemechanics.o: gamemechanics.c ./GfxLib/GfxLib.h  
 	gcc -Wall -c $< -O2
 
-genetics.o: genetics.c ./GfxLib/GfxLib.h ./GfxLib/BmpLib.h 
+genetics.o: genetics.c ./GfxLib/GfxLib.h  
 	gcc -Wall -c $< -O2
 
 gfx:
