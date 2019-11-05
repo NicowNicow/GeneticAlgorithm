@@ -64,20 +64,13 @@ void platform_bounce(PLAY* player, PLA** platforms_list)
 		if ((((platforms_list[index]->Ypos)+15<=player->Ypos)&&((platforms_list[index]->Ypos)+25>=player->Ypos))&&(((platforms_list[index]->Xpos)-48<=player->Xpos)&&((platforms_list[index]->Xpos)+69>=player->Xpos)))
 		{
 			player->jump=index;
+			player->Ypos=player->Ypos+jumpSpeed;
+			player->jumpTime=1;
 		    score_up(player);
-		}
-		if (player->jump!=10)
-		{
 			break;
 		}
 	}
-	if (player->jump!=10)
-	{
-		player->Ypos=player->Ypos+jumpSpeed;
-		player->jumpTime=1;
-		rafraichisFenetre();
-	}
-	else if (player->jumpTime!=0)
+	if (player->jumpTime!=0)
 	{
 		player->Ypos=player->Ypos+jumpSpeed;
 		player->jumpTime=player->jumpTime+1;
@@ -180,10 +173,10 @@ void scrolling_player(PLAY** players_list)
 	{
 		countdownPlay=0;
 	}
-	for (int index=0;index<numberPlayers;index++) //Player->jump designate the platform on which the player is jumping
-	{											  //During the scrolling, the player is not on any platform, hence the reset here
-		players_list[index]->jump=10;
-	}
+	// for (int index=0;index<numberPlayers;index++) //Player->jump designate the platform on which the player is jumping
+	// {											  //During the scrolling, the player is not on any platform, hence the reset here
+	// 	players_list[index]->jump=10;
+	// }
 	rafraichisFenetre();
 }
 

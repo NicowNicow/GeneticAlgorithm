@@ -135,6 +135,7 @@ void gestionEvenement(EvenementGfx event)
 					regen_platforms_list(platforms_list);
 					spawn_players(players_list);	//Does not modify the genome of the players; only the coordinates, state (alive/dead, jumping/on the ground) and color
 					allPlayersDead=0;
+					demandeTemporisation(20);
 					break;
 			}
 			break;

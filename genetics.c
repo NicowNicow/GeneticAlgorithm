@@ -11,6 +11,7 @@ void move_bot(PLAY* player, PLA** platforms_list)
 {
     int Xrelat;
     Xrelat=bot_eyes(player, platforms_list);
+    printf("%d", Xrelat);
     select_keyboard(player, Xrelat);
     move_player(player);
 }
@@ -19,39 +20,46 @@ void move_bot(PLAY* player, PLA** platforms_list)
 int bot_eyes(PLAY* player, PLA** platforms_list)
 {
     int XrelatPos;
-    int XrelatPosTab[6]={800,800,800,800,800,800}; //800 is not an valid XrelatPos, so that's what we're setting it at the beginning
-    int countPlat;
-    XrelatPos=800;
-    countPlat=0;
-    for (int index=0; index<6;index++)
+    int indexCloser;
+    int temporary;
+    int YposOrderedIndexes[6]={1000,1000,1000,1000,1000,1000}; //1000 cannot be obtain naturally, good for initialization
+    int YposOrdered[6]={1000,1000,1000,1000,1000,1000};
+    //Make a platform_list Ypos list
+    for (int index=0;index<6;index++)
     {
-        if((index!=player->jump)&&(((platforms_list[index]->Ypos)-(player->Ypos))>=(0-5*player->jumpTime))&&(((platforms_list[index]->Ypos)-(player->Ypos))<=(200-5*player->jumpTime)))
+        YposOrdered[index]=platforms_list[index]->Ypos;
+    }
+    //Order the newly created list
+    for (int index=0; index<6; index++) //
+    {
+        temporary=YposOrdered[index];
+        for (int index2=index; (index2>=0)&&(YposOrdered[index2-1]>temporary); index2--) 
         {
-            XrelatPosTab[index]=(platforms_list[index]->Xpos)-(player->Xpos);
-            countPlat++;
+            YposOrdered[index2]=YposOrdered[index2-1];
         }
+        YposOrdered[index]=temporary;
     }
-    if (countPlat==0) //No platform were found this time
+    //Create a list of ordered indexes
+    for (int index=0; index<6; index++) 
     {
-        return(0);
-    }
-    if (countPlat==1)   //Only one platform was found
-    {
-        for (int index=0; index<6;index++)
+        for (int index2=0; index2<6; index++)
         {
-            if (XrelatPosTab[index]!=800)
+            if (YposOrdered[index]==platforms_list[index2]->Ypos)
             {
-                return(XrelatPosTab[index]);
+                YposOrderedIndexes[index]=index2;
             }
         }
     }
-    else    //Several platforms were found
+    //Find the index that describe the nearest platform
+    for (int index=0;index<6;index++)
     {
-        while (XrelatPos==800)
+        if (YposOrderedIndexes[index]==player->jump)
         {
-            XrelatPos=XrelatPosTab[random_int_generator(0,5)];
-        }  
+            indexCloser=index+1;
+            break;
+        }
     }
+    XrelatPos=player->Xpos-platforms_list[indexCloser]->Xpos;
     return(XrelatPos);
 }
 
@@ -66,12 +74,14 @@ PLAY** malloc_players_list(void)
 	}
     spawn_players(players_list);
     for (int index=0; index<numberPlayers; index++)
-	{
-		for (int indexLine=0; indexLine<3;indexLine++)
+	{   for (int indexDepth=0; indexDepth<3; indexDepth++)
         {
-            for (int indexColumn=0; indexColumn<3;indexColumn++)
+            for (int indexLine=0; indexLine<3;indexLine++)
             {
-                players_list[index]->genome[indexLine][indexColumn]=random_float_generator(1);
+                for (int indexColumn=0; indexColumn<3;indexColumn++)
+                {
+                    players_list[index]->genome[indexDepth][indexLine][indexColumn]=random_float_generator(1);
+                }
             }
         }
 	}
@@ -124,10 +134,12 @@ int best_score(PLAY** players_list)
 void select_keyboard(PLAY* player, int Xrelat)
 {
     int indexLine;
+    int indexDepth;
     int indexTemp;
+    indexDepth=-1;
     indexLine=-1;
     indexTemp=0;
-    //Select the appropriate column in the gene tab of the player (cf project report)
+    //Select the appropriate column in the gene tab of the player (Allow the player to know the relative position of the next platform)
     if (Xrelat<-25)   
     {
         indexLine=0;
@@ -140,19 +152,32 @@ void select_keyboard(PLAY* player, int Xrelat)
     {
         indexLine=2;
     }
-    //Find the maximum value in the selected column
+    //Select the appropriate depth (allow the player to know their jump Time)
+    if ((player->jumpTime<10)&&(player->jumpTime!=0))
+    {
+        indexDepth=0;
+    }
+    else if ((player->jumpTime>=10)&&(player->jumpTime<=30)) 
+    {
+        indexDepth=1;
+    }
+    else if ((player->jumpTime>30)||(player->jumpTime==0))
+    {
+        indexDepth=2;
+    }
+    //Find the maximum value in the selected column & depth (The player will follow the action gave to him by this maximum value)
     for (int indexColumn=0;indexColumn<3;indexColumn++)
     {
         if (indexColumn==0)
         {
             indexTemp=0;
         }
-        else if (player->genome[indexLine][indexColumn]<=player->genome[indexLine][indexTemp])
+        else if (player->genome[indexDepth][indexLine][indexColumn]<=player->genome[indexDepth][indexLine][indexTemp])
         {
             indexTemp=indexColumn;
         }
     }
-    //select the keyboard key according to the best value
+    //select the keyboard key according to the biggest value 
     switch(indexTemp)
     {
         case 0:
@@ -173,32 +198,39 @@ void select_keyboard(PLAY* player, int Xrelat)
 PLAY crossover(PLAY** players_list)
 {
     PLAY playerTempo; //Used to easily return the nex genome at the end of the function
-    int mask[3][3];
-    int maskInverted[3][3];
+    int mask[3][3][3];
+    int maskInverted[3][3][3];
     int indexPlayer1;
     int indexPlayer2;
     // generation of a random mask
-    for (int indexLine=0;indexLine<3;indexLine++)
+    for (int indexDepth=0; indexDepth<3; indexDepth++)
     {
-        for (int indexColumn=0; indexColumn<3; indexColumn++)
+        for (int indexLine=0;indexLine<3;indexLine++)
         {
-            mask[indexLine][indexColumn]=random_int_generator(0,1);
+            for (int indexColumn=0; indexColumn<3; indexColumn++)
+            {
+                mask[indexDepth][indexLine][indexColumn]=random_int_generator(0,1);
+            }
         }
     }
     // creation of an inverted mask
-    for (int indexLine=0;indexLine<3;indexLine++)
+    for (int indexDepth=0; indexDepth<3; indexDepth++)
     {
-        for (int indexColumn=0; indexColumn<3; indexColumn++)
+        for (int indexLine=0;indexLine<3;indexLine++)
         {
-            switch(mask[indexLine][indexColumn])
+            for (int indexColumn=0; indexColumn<3; indexColumn++)
             {
-                case 0:
-                    maskInverted[indexLine][indexColumn]=1;
-                    break;
+                switch(mask[indexDepth][indexLine][indexColumn])
+                {
+                    case 0:
+                        maskInverted[indexDepth][indexLine][indexColumn]=1;
+                        break;
 
-                case 1:
-                    maskInverted[indexLine][indexColumn]=0;
-                    break;
+                    case 1:
+                        maskInverted[indexDepth][indexLine][indexColumn]=0;
+                        break;
+                        
+                }
             }
         }
     }
@@ -217,11 +249,14 @@ PLAY crossover(PLAY** players_list)
         }
     }
     //Application of the mask
-    for (int indexLine=0;indexLine<3;indexLine++)
+    for (int indexDepth=0; indexDepth<3; indexDepth++)
     {
-        for (int indexColumn=0;indexColumn<3;indexColumn++)
+        for (int indexLine=0;indexLine<3;indexLine++)
         {
-            playerTempo.genome[indexLine][indexColumn]=((players_list[indexPlayer1]->genome[indexLine][indexColumn])*(mask[indexLine][indexColumn])+(players_list[indexPlayer2]->genome[indexLine][indexColumn])*(maskInverted[indexLine][indexColumn]));
+            for (int indexColumn=0;indexColumn<3;indexColumn++)
+            {
+                playerTempo.genome[indexDepth][indexLine][indexColumn]=((players_list[indexPlayer1]->genome[indexDepth][indexLine][indexColumn])*(mask[indexDepth][indexLine][indexColumn])+(players_list[indexPlayer2]->genome[indexDepth][indexLine][indexColumn])*(maskInverted[indexDepth][indexLine][indexColumn]));
+            }
         }
     }
     return(playerTempo);
@@ -231,6 +266,7 @@ PLAY crossover(PLAY** players_list)
 void mutation(PLAY** players_list)
 {
     int mutationsNumber;
+    int randomDepthIndex;
     int randomLineIndex;
     int randomColumnIndex;
     int mutationChances;
@@ -243,8 +279,9 @@ void mutation(PLAY** players_list)
     }
     for (int index=0; index<mutationsNumber-1; index++)
     {
-        randomLineIndex=random_int_generator(0,2); //Those two are for choosing randomly a
+        randomLineIndex=random_int_generator(0,2); //Those three are for choosing randomly a
         randomColumnIndex=random_int_generator(0,2); // gene from a player and mutate it
+        randomDepthIndex=random_int_generator(0,2);
         mutationChances=random_int_generator(0,2);
         switch(mutationChances)
         {
@@ -252,7 +289,7 @@ void mutation(PLAY** players_list)
                 break;
             
             case 1: //Slight mutation, adapted from the algogen one
-                slightMutationTemp=(random_float_generator(1)-0.05)+(players_list[toMutateIndexes[index]]->genome[randomLineIndex][randomColumnIndex]);
+                slightMutationTemp=(random_float_generator(1)-0.05)+(players_list[toMutateIndexes[index]]->genome[randomDepthIndex][randomLineIndex][randomColumnIndex]);
                 if (slightMutationTemp<=0)
                 {
                     slightMutationTemp=0;
@@ -261,11 +298,11 @@ void mutation(PLAY** players_list)
                 {
                     slightMutationTemp=1;
                 }
-                players_list[toMutateIndexes[index]]->genome[randomLineIndex][randomColumnIndex]=slightMutationTemp;        
+                players_list[toMutateIndexes[index]]->genome[randomDepthIndex][randomLineIndex][randomColumnIndex]=slightMutationTemp;        
                 break;
             
             case 2: //Random mutation
-                players_list[toMutateIndexes[index]]->genome[randomLineIndex][randomColumnIndex]=random_float_generator(1);
+                players_list[toMutateIndexes[index]]->genome[randomDepthIndex][randomLineIndex][randomColumnIndex]=random_float_generator(1);
                 break;
         }
 
@@ -302,11 +339,14 @@ int natural_selection(PLAY** players_list)
     {
         if (players_list[index]->score<mediumValue)
         {
-            for (int indexLine=0;indexLine<3;indexLine++)
+            for (int indexDepth=0; indexDepth<3; indexDepth++)
             {
-                for (int indexColumn=0;indexColumn<3;indexColumn++)
+                for (int indexLine=0;indexLine<3;indexLine++)
                 {
-                    players_list[index]->genome[indexLine][indexColumn]=storeNewGenome.genome[indexLine][indexColumn];
+                    for (int indexColumn=0;indexColumn<3;indexColumn++)
+                    {
+                        players_list[index]->genome[indexDepth][indexLine][indexColumn]=storeNewGenome.genome[indexDepth][indexLine][indexColumn];
+                    }
                 }
             }
             playersExtinction=playersExtinction+1;

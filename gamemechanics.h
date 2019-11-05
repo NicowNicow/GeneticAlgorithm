@@ -10,7 +10,7 @@ typedef int BOOL;   //Definition of a BOOL type for the project
 
 #define jumpSpeed 4
 #define fallSpeed 10
-#define lateralSpeed 9
+#define lateralSpeed 12
 
 typedef struct PLATFORM //Definition of a platform structure
 {
@@ -29,7 +29,7 @@ typedef struct PLAYER   //Definition of a player structure
     int keyboard;
 	BOOL alive;
     int color[3];
-    float genome[3][3];
+    float genome[3][3][3];
 } PLAY;
 
 
