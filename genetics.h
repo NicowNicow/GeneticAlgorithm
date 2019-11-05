@@ -30,6 +30,6 @@ PLAY crossover(PLAY** players_list);  //Generate a radom mask (format mask[3][3]
 
 void mutation(PLAY** players_list); //Select a random gene in the genome of a random player in order to change it either radically, slightly or not at all
 
-void natural_selection(PLAY** players_list); //Change the genome of the weakest players with the crossover genome
+int natural_selection(PLAY** players_list); //Change the genome of the weakest players with the crossover genome
 
 #endif

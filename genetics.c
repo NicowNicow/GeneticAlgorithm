@@ -59,7 +59,7 @@ int bot_eyes(PLAY* player, PLA** platforms_list)
 PLAY** malloc_players_list(void)
 {
 	PLAY** players_list;
-	players_list=(PLAY**)malloc(sizeof(PLAY*)*7);
+	players_list=(PLAY**)malloc(sizeof(PLAY*)*numberPlayers);
 	for (int index=0; index<numberPlayers; index++)
 	{
 		players_list[index]=(PLAY*)malloc(sizeof(PLAY));
@@ -91,7 +91,7 @@ void desalloc_players_list(PLAY** players_list)
 
 void regen_platforms_list(PLA** platforms_list)
 {
-    for (int index=0; index<7; index++)
+    for (int index=0; index<6; index++)
 	{
 		if (index==0)
 		{
@@ -128,15 +128,15 @@ void select_keyboard(PLAY* player, int Xrelat)
     indexLine=-1;
     indexTemp=0;
     //Select the appropriate column in the gene tab of the player (cf project report)
-    if (Xrelat<0)   
+    if (Xrelat<-25)   
     {
         indexLine=0;
     }
-    else if (Xrelat==0)
+    else if ((Xrelat>=-25)&&(Xrelat<=46)) //At the middle of a platform, Xrelat=-48 or Xrelat=69 (depending on the position of the platform), so we're just taking a little marge
     {
         indexLine=1;
     }
-    else if (Xrelat>0)
+    else if (Xrelat>46)
     {
         indexLine=2;
     }
@@ -252,7 +252,7 @@ void mutation(PLAY** players_list)
                 break;
             
             case 1: //Slight mutation, adapted from the algogen one
-                slightMutationTemp=(random_float_generator(1)-0.5)+(players_list[toMutateIndexes[index]]->genome[randomLineIndex][randomColumnIndex]);
+                slightMutationTemp=(random_float_generator(1)-0.05)+(players_list[toMutateIndexes[index]]->genome[randomLineIndex][randomColumnIndex]);
                 if (slightMutationTemp<=0)
                 {
                     slightMutationTemp=0;
@@ -273,12 +273,14 @@ void mutation(PLAY** players_list)
 }
 
 
-void natural_selection(PLAY** players_list)
+int natural_selection(PLAY** players_list)
 {
     PLAY storeNewGenome;
     int minimalValue;
     int mediumValue;
     int maximalValue;
+    int playersExtinction; //Used to print the number of changed players
+    playersExtinction=0;
     storeNewGenome=crossover(players_list);
     minimalValue=32000; //Arbitrary value that can't be reach by a mistrained player
     maximalValue=0;
@@ -294,11 +296,11 @@ void natural_selection(PLAY** players_list)
             maximalValue=players_list[index]->score;
         }
     }
-    mediumValue=(maximalValue-minimalValue)/2;
+    mediumValue=(0.99*maximalValue-1.22*minimalValue)/2; //Values chosen after some tests
     //Determination of all the indexes of players whose genomes must be changed by the crossover one and replacement of those genomes
     for (int index=0; index<numberPlayers;index++)
     {
-        if (players_list[index]->score<=mediumValue)
+        if (players_list[index]->score<mediumValue)
         {
             for (int indexLine=0;indexLine<3;indexLine++)
             {
@@ -307,7 +309,9 @@ void natural_selection(PLAY** players_list)
                     players_list[index]->genome[indexLine][indexColumn]=storeNewGenome.genome[indexLine][indexColumn];
                 }
             }
+            playersExtinction=playersExtinction+1;
         }
     }
     mutation(players_list);
+    return(playersExtinction);
 }

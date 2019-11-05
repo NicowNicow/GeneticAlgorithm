@@ -12,9 +12,12 @@
 
 static PLA** platforms_list;
 static PLAY** players_list;
+int playersCount;
+int bestScore;
+int playersExtinction;
 int indexGenerations;
 int allPlayersDead;
-int scoreMax;
+int score;
 int indexMaxYPos;
 BOOL scrollingActive;
 
@@ -25,7 +28,7 @@ int main(int argc, char *argv[])
 {
 	srand(time(NULL)); //Initialise of the rand() function used in gamemechanics.c
 	initialiseGfx(argc, argv);
-	prepareFenetreGraphique(argv[argc-1], 480, 800);
+	prepareFenetreGraphique(argv[argc-1], 480, 900);
 	lanceBoucleEvenements();
 	return 0;
 }
@@ -39,8 +42,11 @@ void gestionEvenement(EvenementGfx event)
 	{
 		case Initialisation:
 			indexGenerations=0;
+			playersCount=numberPlayers;
 			allPlayersDead=0;
-			scoreMax=0;
+			score=0;
+			playersExtinction=0;
+			bestScore=0;
 			indexMaxYPos=0;
 			platforms_list = malloc_platforms_list();
 			players_list=malloc_players_list();
@@ -70,7 +76,7 @@ void gestionEvenement(EvenementGfx event)
 						platform_bounce(players_list[index], platforms_list);
 						check_platforms(platforms_list);
 						move_bot(players_list[index], platforms_list);
-						death_player(players_list[index]);
+						playersCount=death_player(players_list[index],playersCount);
 						allPlayersDead=0;
 					}
 					else
@@ -78,17 +84,25 @@ void gestionEvenement(EvenementGfx event)
 						allPlayersDead++;
 					}
 				}
-			scoreMax=best_score(players_list);
+			score=best_score(players_list);
 			if (allPlayersDead>=numberPlayers)
 			{
 				indexGenerations++;
 			}
 			if ((allPlayersDead>=numberPlayers)&&(indexGenerations<numberGenerations))
 			{
-				natural_selection(players_list);
+				for (int index=0;index<numberPlayers;index++) //keeping the best score of this generation to print it on the screen
+				{
+					if (players_list[index]->score>=bestScore)
+					{
+						bestScore=players_list[index]->score;
+					}
+				}
+				playersExtinction=natural_selection(players_list);
 				regen_platforms_list(platforms_list);
 				spawn_players(players_list);	//Does not modify the genome of the players; only the coordinates, state (alive/dead, jumping/on the ground) and color
 				allPlayersDead=0;
+				playersCount=numberPlayers;
 			}
 		break;
 
@@ -97,7 +111,7 @@ void gestionEvenement(EvenementGfx event)
 			draw_platforms(platforms_list);
 			if (indexGenerations<numberGenerations)	
 			{
-				draw_generation_score(indexGenerations+1, scoreMax);
+				draw_generation_score(indexGenerations+1, score, playersCount, playersExtinction, bestScore);
 			}
 			for (int index=0;index<numberPlayers;index++)
 			{

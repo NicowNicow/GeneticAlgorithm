@@ -8,7 +8,7 @@ typedef int BOOL;   //Definition of a BOOL type for the project
 #define TRUE  1
 #define FALSE 0
 
-#define jumpSpeed 5
+#define jumpSpeed 4
 #define fallSpeed 10
 #define lateralSpeed 9
 
@@ -48,7 +48,7 @@ void platform_bounce(PLAY* player, PLA** platforms_list); //Make a player bounce
 
 void score_up(PLAY* player);    //Incrementation of the score of each player when they climb
 
-void death_player(PLAY* player); //Change the status of a player to dead as soons as he fells off the screen
+int death_player(PLAY* player, int playersCount); //Change the status of a player to dead as soons as he fells off the screen
 
 
 /* ------------------  Plateforme Stuff  ------------------ */
@@ -76,7 +76,7 @@ void draw_platforms(PLA** platforms_list);  //Draw the platforms
 
 void draw_player(PLAY* player);  //Draw the player
 
-void draw_generation_score(int indexGenerations, int scoreMax); //Write the score on the screen
+void draw_generation_score(int indexGenerations, int score, int playersCount, int playersExtinction, int bestScore); //Write the score on the screen
 
 
 #endif

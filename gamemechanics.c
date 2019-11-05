@@ -101,12 +101,14 @@ void score_up(PLAY* player)
 }
 
 
-void death_player(PLAY* player)
+int death_player(PLAY* player, int playersCount)
 {
 	if (player->Ypos<=0)
 	{
 		player->alive=FALSE;
+		playersCount=playersCount-1;
 	}
+	return(playersCount);
 }
 
 
@@ -116,7 +118,7 @@ void death_player(PLAY* player)
 PLA** malloc_platforms_list(void)
 {
 	PLA** platforms_list;
-	platforms_list=(PLA**)malloc(sizeof(PLA*)*7);
+	platforms_list=(PLA**)malloc(sizeof(PLA*)*7); //IDK why, but if I dont malloc 7 slots, even if we only use 6, I get a Segfault
 	for (int index=0; index<7; index++)
 	{
 		platforms_list[index]=(PLA*)malloc(sizeof(PLA));
@@ -127,6 +129,11 @@ PLA** malloc_platforms_list(void)
 			
 		}
 		else initial_spawn_platform(platforms_list, index);
+		if (index==6)
+		{
+			platforms_list[index]->Xpos=0;	//Allocation of the 7th slot to (0,0) so that it doesn't mess with replace_platform()
+			platforms_list[index]->Ypos=0; //Temporary solution tho, I really need to find what cause the Segfault
+		}
 	}
 	return(platforms_list);
 }
@@ -230,14 +237,14 @@ void desalloc_platforms_list(PLA** platforms_list)
 void draw_background(void)
 {
 	couleurCourante(255, 255, 255);
-	rectangle(0, 0, 480, 800);
+	rectangle(0, 0, 480, 900);
 }
 
 
 void draw_platforms(PLA** platforms_list)
 {
 	couleurCourante(0, 120, 0);
-	for(int index=0;index<7;index++)
+	for(int index=0;index<6;index++)
 	{
 		rectangle(platforms_list[index]->Xpos, platforms_list[index]->Ypos, platforms_list[index]->Xpos+70,platforms_list[index]->Ypos+20);
 	}
@@ -251,13 +258,26 @@ void draw_player(PLAY* player)
 }
 
 
-void draw_generation_score(int indexGenerations, int scoreMax)
+void draw_generation_score(int indexGenerations, int score, int playersCount, int playersExtinction, int bestScore)
 {
 	char displayGeneration[64]="";
-	char displayScoreMax[64]="";
+	char displayScore[64]="";
+	char displayPlayersCount[64]="";
+	char displayPlayersExtinction[64]="";
+	char displaybestScore[64]="";
+	sprintf(displayPlayersExtinction, "Players Modified = %d ", playersExtinction);
 	sprintf(displayGeneration, "Generation = %d ", indexGenerations);
+	sprintf(displayPlayersCount, "Players left = %d", playersCount);
+	sprintf(displayScore, "Score = %d ", score);
+	sprintf(displaybestScore, "Best Score = %d", bestScore);
 	couleurCourante(0,0,0);
-	afficheChaine(displayGeneration, 20, 10, 770);
-	sprintf(displayScoreMax, "Score Max = %d ", scoreMax);
-	afficheChaine(displayScoreMax, 20, 250, 770);
+	//First Line
+	afficheChaine(displayGeneration, 20, 10, 820);
+	afficheChaine(displaybestScore, 20, 220, 820);
+	//Second Line
+	afficheChaine(displayPlayersExtinction, 20,10,790); 
+	afficheChaine(displayPlayersCount, 20, 280,790);
+	//Third Line
+	afficheChaine(displayScore, 20, 180, 760);
+	rectangle(0, 752, 480, 753);
 }
