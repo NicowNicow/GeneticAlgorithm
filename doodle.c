@@ -50,7 +50,7 @@ void gestionEvenement(EvenementGfx event)
 			indexMaxYPos=0;
 			platforms_list = malloc_platforms_list();
 			players_list=malloc_players_list();
-			demandeTemporisation(20);
+			demandeTemporisation(refresh_time);
 			break;
 
 		case Temporisation:
@@ -117,7 +117,7 @@ void gestionEvenement(EvenementGfx event)
 			{
 				draw_player(players_list[index]);
 			}
-			demandeTemporisation(20);
+			demandeTemporisation(refresh_time);
 			break;
 
 		case Clavier:
@@ -135,8 +135,25 @@ void gestionEvenement(EvenementGfx event)
 					regen_platforms_list(platforms_list);
 					spawn_players(players_list);	//Does not modify the genome of the players; only the coordinates, state (alive/dead, jumping/on the ground) and color
 					allPlayersDead=0;
-					demandeTemporisation(20);
+					playersCount=numberPlayers;
+					demandeTemporisation(refresh_time);
 					break;
+
+				case 'K':
+				case 'k':
+					indexGenerations++;
+					for (int index=0;index<numberPlayers;index++) //keeping the best score of this generation to print it on the screen
+					{
+						if (players_list[index]->score>=bestScore)
+						{
+							bestScore=players_list[index]->score;
+						}
+					}
+					playersExtinction=natural_selection(players_list);
+					regen_platforms_list(platforms_list);
+					spawn_players(players_list);	//Does not modify the genome of the players; only the coordinates, state (alive/dead, jumping/on the ground) and color
+					allPlayersDead=0;
+					playersCount=numberPlayers;
 			}
 			break;
 

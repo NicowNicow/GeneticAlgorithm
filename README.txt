@@ -10,5 +10,10 @@
 
 ->The "algogen - commented.c" is just a fully commented version of the algogen file you gave to us during the lessons.
 
-->In some rare cases, the next plateform spawn out of jump range of the players, or the players get stuck. In those case, pressing "R" allow players and platforms to
-respawn, without changing the current genomes.
+Special Keys Control:
+	-> Use Q to exit the program
+
+	->Playable Game: Use left an right arrow to move, and the down one to stabilize
+
+	->Genetic Algorithm: Use R to restart the current generation without changing any genome
+			     Use K to kill all the players and launch the next generation

@@ -1,5 +1,5 @@
 doodle: doodle.o gamemechanics.o genetics.o ./GfxLib/libisentlib.a
-	gcc -Wall $^ -o $@ -lm -lglut -lGL -lX11
+	gcc -Wall $^ -o $@ -lm -lglut -lGL -lX11 
 
 doodle.o: doodle.c ./GfxLib/GfxLib.h  
 	gcc -Wall -c $< -O2

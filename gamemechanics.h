@@ -10,7 +10,8 @@ typedef int BOOL;   //Definition of a BOOL type for the project
 
 #define jumpSpeed 4
 #define fallSpeed 10
-#define lateralSpeed 12
+#define lateralSpeed 8
+#define refresh_time 1
 
 typedef struct PLATFORM //Definition of a platform structure
 {

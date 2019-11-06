@@ -11,7 +11,6 @@ void move_bot(PLAY* player, PLA** platforms_list)
 {
     int Xrelat;
     Xrelat=bot_eyes(player, platforms_list);
-    printf("%d", Xrelat);
     select_keyboard(player, Xrelat);
     move_player(player);
 }
@@ -21,43 +20,17 @@ int bot_eyes(PLAY* player, PLA** platforms_list)
 {
     int XrelatPos;
     int indexCloser;
-    int temporary;
-    int YposOrderedIndexes[6]={1000,1000,1000,1000,1000,1000}; //1000 cannot be obtain naturally, good for initialization
-    int YposOrdered[6]={1000,1000,1000,1000,1000,1000};
-    //Make a platform_list Ypos list
-    for (int index=0;index<6;index++)
+    if (player->jump==10) //the initial situation
     {
-        YposOrdered[index]=platforms_list[index]->Ypos;
+        return(0);
     }
-    //Order the newly created list
-    for (int index=0; index<6; index++) //
+    else if (player->jump==5) //Max platform
     {
-        temporary=YposOrdered[index];
-        for (int index2=index; (index2>=0)&&(YposOrdered[index2-1]>temporary); index2--) 
-        {
-            YposOrdered[index2]=YposOrdered[index2-1];
-        }
-        YposOrdered[index]=temporary;
+        indexCloser=0;
     }
-    //Create a list of ordered indexes
-    for (int index=0; index<6; index++) 
+    else
     {
-        for (int index2=0; index2<6; index++)
-        {
-            if (YposOrdered[index]==platforms_list[index2]->Ypos)
-            {
-                YposOrderedIndexes[index]=index2;
-            }
-        }
-    }
-    //Find the index that describe the nearest platform
-    for (int index=0;index<6;index++)
-    {
-        if (YposOrderedIndexes[index]==player->jump)
-        {
-            indexCloser=index+1;
-            break;
-        }
+        indexCloser=player->jump+1;
     }
     XrelatPos=player->Xpos-platforms_list[indexCloser]->Xpos;
     return(XrelatPos);

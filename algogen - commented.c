@@ -5,7 +5,7 @@
 #include "ESLib.h" // For valeurAleatoire()
 
 
-#ifndef M_PI	// Définition of a PI variable
+#ifndef M_PI	// Dï¿½finition of a PI variable
 #define M_PI 3.141592654
 #endif
 
@@ -212,7 +212,7 @@ void gestionEvenement(EvenementGfx event)
 			computeHistogram();
 			iterate = false;
 			phase = false;
-			demandeTemporisation(20);
+			demandeTemporisation(refresh_time);
 			break;
 
 		case Temporisation:
